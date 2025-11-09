@@ -631,8 +631,7 @@ Status AudioPolicyService::getInputForAttr(const media::AudioAttributesInternal&
     // type is API_INPUT_MIX_EXT_POLICY_REROUTE and by AudioService if a media projection
     // is used and input type is API_INPUT_MIX_PUBLIC_CAPTURE_PLAYBACK
     // - ECHO_REFERENCE source is controlled by captureAudioOutputAllowed()
-    if (!isAudioServerOrMediaServerUid(attributionSource.uid)
-            && !(recordingAllowed(attributionSource, inputSource)
+    if (!(recordingAllowed(attributionSource, inputSource)
             || inputSource == AUDIO_SOURCE_FM_TUNER
             || inputSource == AUDIO_SOURCE_REMOTE_SUBMIX
             || inputSource == AUDIO_SOURCE_ECHO_REFERENCE)) {
@@ -713,7 +712,7 @@ Status AudioPolicyService::getInputForAttr(const media::AudioAttributesInternal&
                 // FIXME: use the same permission as for remote submix for now.
                 FALLTHROUGH_INTENDED;
             case AudioPolicyInterface::API_INPUT_MIX_CAPTURE:
-                if (!isAudioServerOrMediaServerUid(attributionSource.uid) && !canCaptureOutput) {
+                if (!canCaptureOutput) {
                     if (property_get_bool("vendor.audio.enable.mirrorlink", false)) {
                         media::AudioPolicyDeviceState aidlRet;
                         AudioDevice deviceAidl;
@@ -811,12 +810,6 @@ Status AudioPolicyService::startInput(int32_t portIdAidl)
             client->attributes.source);
 
     // check calling permissions
-    if (!isAudioServerOrMediaServerUid(client->attributionSource.uid)
-            && !(startRecording(client->attributionSource, String16(msg.str().c_str()),
-                         client->attributes.source)
-            || client->attributes.source == AUDIO_SOURCE_FM_TUNER
-            || client->attributes.source == AUDIO_SOURCE_REMOTE_SUBMIX
-            || client->attributes.source == AUDIO_SOURCE_ECHO_REFERENCE)) {
     if (permitted == PERMISSION_HARD_DENIED) {
         ALOGE("%s permission denied: recording not allowed for attribution source %s",
                 __func__, client->attributionSource.toString().c_str());
